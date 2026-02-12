@@ -36,6 +36,9 @@
  * of time only, and therefore timer overflows are not handled.
 */
 
+/* Standard includes. */
+#include <windows.h>
+
 /* FreeRTOS includes. */
 // #include <FreeRTOS.h>
 #include "trcRecorder.h"
