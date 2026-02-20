@@ -92,21 +92,6 @@
 #include "timers.h"
 #include "semphr.h"
 
-#include "can_driver.h"
-#include "system_signals.h"
-
-// Task priorities
-#define CAN_TX_TASK_PRIORITY    (tskIDLE_PRIORITY + 3)
-#define CAN_RX_TASK_PRIORITY    (tskIDLE_PRIORITY + 4)
-#define CAN_MONITOR_TASK_PRIORITY (tskIDLE_PRIORITY + 2)
-#define SYS_STATUS_TASK_PRIORITY (tskIDLE_PRIORITY + 1)
-
-// Stack sizes
-#define CAN_TX_STACK_SIZE       (configMINIMAL_STACK_SIZE * 4)
-#define CAN_RX_STACK_SIZE       (configMINIMAL_STACK_SIZE * 4)
-#define CAN_MONITOR_STACK_SIZE  (configMINIMAL_STACK_SIZE * 2)
-#define SYS_STATUS_STACK_SIZE   (configMINIMAL_STACK_SIZE * 2)
-
 /* Priorities at which the tasks are created. */
 #define mainQUEUE_RECEIVE_TASK_PRIORITY    ( tskIDLE_PRIORITY + 2 )
 #define mainQUEUE_SEND_TASK_PRIORITY       ( tskIDLE_PRIORITY + 1 )
@@ -132,11 +117,6 @@
 
 /*-----------------------------------------------------------*/
 
-void CAN0_RxIRQHandler( TimerHandle_t xTimerHandle );
-void CAN0_TxIRQHandler( TimerHandle_t xTimerHandle );
-
-static void system_status_task(void *pvParameters);
-
 /*
  * The tasks as described in the comments at the top of this file.
  */
@@ -155,62 +135,21 @@ static QueueHandle_t xQueue = NULL;
 
 /* A software timer that is started from the tick hook. */
 static TimerHandle_t xTimer = NULL;
-static TimerHandle_t xRxTimer = NULL;
-static TimerHandle_t xTxTimer = NULL;
-
-/* System signals */
-system_data_t sys_data;
 
 /*-----------------------------------------------------------*/
 
 /*** SEE THE COMMENTS AT THE TOP OF THIS FILE ***/
 void main_blinky( void )
 {
-    const TickType_t xRxTimerPeriod = mainRX_TIMER_SEND_FREQUENCY_MS;
-    const TickType_t xTxTimerPeriod = mainTX_TIMER_SEND_FREQUENCY_MS;
     const TickType_t xTimerPeriod = mainTIMER_SEND_FREQUENCY_MS;
 
     printf( "\r\nStarting the blinky demo. Press \'%c\' to reset the software timer used in this demo.\r\n\r\n", mainRESET_TIMER_KEY );
     
-    // Initialize CAN driver
-    if (can_init() != 0) {
-        printf("Failed to initialize CAN driver\n");
-    }
-
-    system_signals_init();
-
     /* Create the queue. */
     xQueue = xQueueCreate( mainQUEUE_LENGTH, sizeof( uint32_t ) );
 
     if( xQueue != NULL )
     {
-        // CAN RX monitor task (from generated code)  
-        // xTaskCreate(can_rx_monitor_task, "CAN_MON", CAN_MONITOR_STACK_SIZE, NULL,
-        //             CAN_MONITOR_TASK_PRIORITY, NULL);
-
-        // CAN RX/TX processing task (from driver)
-        xTaskCreate(can_drv_task, "CAN_RXTX", CAN_RX_STACK_SIZE, NULL,
-                    CAN_RX_TASK_PRIORITY, NULL);
-
-        /* Create the software timer, but don't start it yet. */
-        xRxTimer = xTimerCreate( "Timer_CAN_RX",            /* The text name assigned to the software timer - for debug only as it is not used by the kernel. */
-                               xRxTimerPeriod,              /* The period of the software timer in ticks. */
-                               pdTRUE,                      /* xAutoReload is set to pdTRUE. */
-                               NULL,                        /* The timer's ID is not used. */
-                               CAN0_RxIRQHandler ); /* The function executed when the timer expires. */
-
-        /* Create the software timer, but don't start it yet. */
-        xTxTimer = xTimerCreate( "Timer_CAN_TX",            /* The text name assigned to the software timer - for debug only as it is not used by the kernel. */
-                               xTxTimerPeriod,              /* The period of the software timer in ticks. */
-                               pdTRUE,                      /* xAutoReload is set to pdTRUE. */
-                               NULL,                        /* The timer's ID is not used. */
-                               CAN0_TxIRQHandler ); /* The function executed when the timer expires. */
-
-        /* System status task */
-        xTaskCreate(system_status_task, "STATUS", SYS_STATUS_STACK_SIZE, NULL,
-                    SYS_STATUS_TASK_PRIORITY, NULL);
-
-#if 0
         /* Start the two tasks as described in the comments at the top of this
          * file. */
         xTaskCreate( prvQueueReceiveTask,             /* The function that implements the task. */
@@ -234,16 +173,7 @@ void main_blinky( void )
         {
             xTimerStart( xTimer, 0 );
         }
-#endif
-        if( xRxTimer != NULL )
-        {
-            xTimerStart( xRxTimer, 0 );
-        }
 
-        if( xTxTimer != NULL )
-        {
-            xTimerStart( xTxTimer, 0 );
-        }
 
         /* Start the tasks and timer running. */
         vTaskStartScheduler();
@@ -259,36 +189,6 @@ void main_blinky( void )
     }
 }
 /*-----------------------------------------------------------*/
-
-// System status task
-static void system_status_task(void *pvParameters) {
-    TickType_t xLastWakeTime = xTaskGetTickCount();
-    const TickType_t xFrequency = pdMS_TO_TICKS(5000); // 5 second interval
-    
-    printf("System status task started\n");
-    
-    for (;;) {
-        // Print system statistics
-        can_statistics_t* stats = can_get_statistics();
-        printf("\n=== System Status ===\n");
-        printf("CAN TX Count: %lu\n", stats->tx_count);
-        printf("CAN RX Count: %lu\n", stats->rx_count);
-        printf("CAN Errors: %lu\n", stats->error_count);
-        printf("Free Heap: %u bytes\n", xPortGetFreeHeapSize());
-        
-        // Print some signal values
-        if (get_system_data(&sys_data) == 0) {
-            printf("System Data Sample:\n");
-            printf("  Diagnose_CAN_1: %llu\n", (unsigned long long)sys_data.diagnose_can_1);
-            printf("  Diagnose_CAN_2: %llu\n", (unsigned long long)sys_data.diagnose_can_2);
-            printf("  Diagnose_CAN_3: %llu\n", (unsigned long long)sys_data.diagnose_can_3);
-        }
-        printf("=====================\n\n");
-        
-        // Wait for next interval
-        vTaskDelayUntil(&xLastWakeTime, xFrequency);
-    }
-}
 
 static void prvQueueSendTask( void * pvParameters )
 {

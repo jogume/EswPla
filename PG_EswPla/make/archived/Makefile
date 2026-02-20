@@ -113,18 +113,18 @@ MAIN_INCLUDE_DIRS :=
 MAIN_BUILD_DIR := $(BUILD_DIR)/main
 
 ## Main includes
-MAIN_INCLUDES += $(wildcard $(MAIN_DIR)/framework/*.h)
-MAIN_INCLUDES += $(wildcard $(MAIN_DIR)/freertos_app/*.h)
-MAIN_INCLUDES += $(wildcard $(MAIN_DIR)/pack_unpack/*.h)
+# MAIN_INCLUDES += $(wildcard $(MAIN_DIR)/framework/*.h)
+# MAIN_INCLUDES += $(wildcard $(MAIN_DIR)/freertos_app/*.h)
+# MAIN_INCLUDES += $(wildcard $(MAIN_DIR)/pack_unpack/*.h)
 MAIN_INCLUDE_DIRS += -I $(MAIN_DIR)
-MAIN_INCLUDE_DIRS += -I $(MAIN_DIR)/framework
-MAIN_INCLUDE_DIRS += -I $(MAIN_DIR)/freertos_app
-MAIN_INCLUDE_DIRS += -I $(MAIN_DIR)/pack_unpack
+# MAIN_INCLUDE_DIRS += -I $(MAIN_DIR)/framework
+# MAIN_INCLUDE_DIRS += -I $(MAIN_DIR)/freertos_app
+# MAIN_INCLUDE_DIRS += -I $(MAIN_DIR)/pack_unpack
 
-## Main sources
-MAIN_SOURCES += $(wildcard $(MAIN_DIR)/framework/*.c)
-MAIN_SOURCES += $(wildcard $(MAIN_DIR)/freertos_app/*.c)
-MAIN_SOURCES += $(wildcard $(MAIN_DIR)/pack_unpack/*.c)
+# ## Main sources
+# MAIN_SOURCES += $(wildcard $(MAIN_DIR)/framework/*.c)
+# MAIN_SOURCES += $(wildcard $(MAIN_DIR)/freertos_app/*.c)
+# MAIN_SOURCES += $(wildcard $(MAIN_DIR)/pack_unpack/*.c)
 MAIN_SOURCES += $(wildcard $(MAIN_DIR)/*.c)
 MAIN_SOURCES := $(filter-out $(MAIN_DIR)/main_full.c, $(MAIN_SOURCES))
 
