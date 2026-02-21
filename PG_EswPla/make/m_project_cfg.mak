@@ -34,7 +34,7 @@ HEADER_PATH += -I E_FreeRTOS_Kernel/include
 HEADER_PATH += -I E_FreeRTOS_Kernel/portable/MSVC-MingW
 HEADER_PATH += -I E_FreeRTOS_Plus_Trace/include
 HEADER_PATH += -I E_FreeRTOS_Plus_Trace/kernelports/FreeRTOS/include
-HEADER_PATH += -I M_brose/interface
+HEADER_PATH += -I M_make/interface
 
 #------ List all the module libs to be linked --------------------------------#
 LIBRARY_QAC      = E_FreeRTOS_Kernel/output/$(PROJECT_NAME)/library/E_FreeRTOS_Kernel_default.lib
