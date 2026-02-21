@@ -16,15 +16,12 @@ PRE_COMPILE_VARIANT    = default
 # Objects - Main application files
 #---------------------------------------------------------------------------------------------------------------------------#
 OBJ_QAC   	 = main.o \
-               main_blinky.o \
                Run-time-stats-utils.o \
                can_dbc_generated.o \
                system_signals.o \
                can_driver.o \
                can_scheduler.o \
                dbc_pack_unpack.o
-
-# Note: main_full.c is filtered out as per original Makefile
 OBJ_ASM      =
 
 OBJ_NOQAC 	 =
