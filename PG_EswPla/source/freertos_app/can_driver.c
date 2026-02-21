@@ -1,6 +1,7 @@
 // CAN Driver Abstraction Layer
 // Adapt this to your specific MCU and CAN peripheral
 
+#include "yolpiya.h"
 #include "can_driver.h"
 
 #include "can_dbc_generated.h"
@@ -9,8 +10,6 @@
 #include "timers.h"
 #include "queue.h"
 #include "semphr.h"
-#include <string.h>
-#include <stdio.h>
 
 // CAN driver configuration
 #define CAN_RX_QUEUE_SIZE 32

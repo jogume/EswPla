@@ -2,8 +2,7 @@
 #ifndef CAN_DRIVER_H
 #define CAN_DRIVER_H
 
-#include <stdint.h>
-#include <stdbool.h>
+#include "yolpiya.h"
 
 // CAN frame structure
 typedef struct {

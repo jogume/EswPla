@@ -2,13 +2,12 @@
 // Node: nZC_test_bench_1
 // Generated on: 2025-08-28 08:06:10
 
+#include "yolpiya.h"
 #include "can_dbc_generated.h"
 #include "can_driver.h"
 #include "dbc_messages.h"
 #include "dbc_pack_unpack.h"
 #include "system_signals.h"
-#include <stdio.h>
-#include <string.h>
 
 // Include DBC-generated pack/unpack functions
 // NOTE: You need to generate these using cantools or similar

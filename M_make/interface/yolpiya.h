@@ -381,12 +381,25 @@
 
   #if defined(__cplusplus)
     #include <cstdint>
+    #include <cstdio>
+    #include <cstdlib>
+    #include <cstring>
+    #include <cstddef>
   #else
     #include <stdint.h>
+    #include <stdio.h>
+    #include <stdlib.h>
+    #include <string.h>
+    #include <stddef.h>
   #endif
 
-
   #include <stdbool.h>
+
+  /* Windows-specific headers for FreeRTOS Windows simulator */
+  #if defined(_WIN32) || defined(_WIN64)
+    #include <conio.h>
+    #include <windows.h>
+  #endif
 
 #elif defined(_MSC_VER)
   #define YOLPIYA_CPU_TYPE                YOLPIYA_CPU_X86_VS

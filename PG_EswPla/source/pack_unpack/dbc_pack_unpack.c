@@ -1,13 +1,11 @@
 // Generated DBC Pack/Unpack Functions
 // Generated from: Unknown
 
+#include "yolpiya.h"
 #include "dbc_pack_unpack.h"
-#include <string.h>
 
 // Message pack functions
 #include "dbc_messages.h"
-#include <string.h>
-#include <stdio.h>
 
 // Pack Diagnose_Communication message
 uint8_t diagnose_communication_pack(uint8_t* data, const diagnose_communication_t* msg, uint8_t size) {

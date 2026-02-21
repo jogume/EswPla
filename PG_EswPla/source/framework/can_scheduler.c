@@ -7,13 +7,12 @@
  * @misra_rules 17.7, 1.3, 8.7, 2.2
  */
 
+#include "yolpiya.h"
 #include "can_dbc_generated.h"
 
 /* Kernel includes. */
 #include "FreeRTOS.h"
 #include "task.h"
-#include <string.h>
-#include <stdio.h>
 
 // CAN message reception callback (called from CAN ISR or polling)
 void can_message_received(uint32_t id, const uint8_t* data, uint8_t dlc, uint32_t timestamp) {

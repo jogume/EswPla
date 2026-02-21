@@ -25,9 +25,7 @@
 #define CAN_DBC_GENERATED_H
 
 /* MISRA C:2012 compliant includes */
-#include <stdint.h>
-#include <stdbool.h>
-#include <stddef.h>
+#include "yolpiya.h"
 
 #ifdef __cplusplus
 extern "C" {

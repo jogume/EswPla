@@ -69,8 +69,7 @@
 
 
 /* Standard includes. */
-#include <stdio.h>
-#include <stdlib.h>
+#include "yolpiya.h"
 
 /* Kernel includes. */
 #include <FreeRTOS.h>

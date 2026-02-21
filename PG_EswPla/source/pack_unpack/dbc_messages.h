@@ -2,8 +2,7 @@
 #ifndef DBC_MESSAGES_H
 #define DBC_MESSAGES_H
 
-#include <stdint.h>
-#include <stdbool.h>
+#include "yolpiya.h"
 
 // Diagnose_Communication (ID: 0x370, DLC: 64)
 typedef struct {
@@ -41,11 +40,11 @@ typedef struct {
     int8_t lm00_output_request; // Range: -101 to 101
     int8_t lm00_output_state; // Range: -101 to 101
     uint8_t roomlamp1_output_errorstate; // Range: 0 to 255
-    uint16_t lm00_output_temp; // Unit: °C, Range: 0 to 6553.5
+    uint16_t lm00_output_temp; // Unit: ï¿½C, Range: 0 to 6553.5
     uint16_t lm00_output_voltage; // Unit: V, Range: 0 to 655.35
     int16_t roomlamp1_output_current; // Unit: A, Range: -327.68 to 327.67
     int8_t roomlamp1_output_state; // Range: -101 to 101
-    uint16_t roomlamp1_output_temp; // Unit: °C, Range: 0 to 6553.5
+    uint16_t roomlamp1_output_temp; // Unit: ï¿½C, Range: 0 to 6553.5
     uint16_t roomlamp1_output_voltage; // Unit: V, Range: 0 to 655.35
 } states_cmc1_roomlamp1_t;
 

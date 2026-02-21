@@ -1,11 +1,10 @@
 // System Signal Interface Implementation
 // This file implements the signal getters and setters used by the generated CAN code
 
+#include "yolpiya.h"
 #include "system_signals.h"
 #include "FreeRTOS.h"
 #include "semphr.h"
-#include <string.h>
-#include <stdio.h>
 
 // System data structure
 static system_data_t g_system_data;

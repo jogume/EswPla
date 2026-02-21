@@ -2,8 +2,7 @@
 #ifndef SYSTEM_SIGNALS_H
 #define SYSTEM_SIGNALS_H
 
-#include <stdint.h>
-#include <stdbool.h>
+#include "yolpiya.h"
 
 // System data structure containing all signals
 typedef struct {

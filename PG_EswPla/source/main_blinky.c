@@ -81,8 +81,7 @@
  */
 
 /* Standard includes. */
-#include <stdio.h>
-#include <conio.h>
+#include "yolpiya.h"
 
 // #include "can_dbc_generated.h"
 
