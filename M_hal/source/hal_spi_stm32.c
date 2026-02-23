@@ -8,9 +8,8 @@
  * @date    2026-02-21
  */
 
+#include "yolpiya.h"
 #include "hal_spi.h"
-#include <string.h>
-#include <stdio.h>
 
 /*============================================================================*/
 /* STM32 Hardware Specific Includes (conditional compilation)                */

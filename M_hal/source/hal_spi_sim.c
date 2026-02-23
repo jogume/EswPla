@@ -7,10 +7,8 @@
  * @date    2026-02-21
  */
 
+#include "yolpiya.h"
 #include "hal_spi.h"
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <time.h>
 
 /*============================================================================*/

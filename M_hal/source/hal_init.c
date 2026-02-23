@@ -6,8 +6,8 @@
  * @date    2026-02-21
  */
 
+#include "yolpiya.h"
 #include "hal_spi.h"
-#include <stdio.h>
 
 /*============================================================================*/
 /* External Operations Declarations                                           */

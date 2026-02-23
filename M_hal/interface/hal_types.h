@@ -8,8 +8,7 @@
 #ifndef HAL_TYPES_H
 #define HAL_TYPES_H
 
-#include <stdint.h>
-#include <stdbool.h>
+#include "yolpiya.h"
 
 /**
  * @brief HAL return codes
