@@ -36,17 +36,20 @@ HEADER_PATH += -I E_FreeRTOS_Plus_Trace/include
 HEADER_PATH += -I E_FreeRTOS_Plus_Trace/kernelports/FreeRTOS/include
 HEADER_PATH += -I M_make/interface
 HEADER_PATH += -I M_hal/interface
+HEADER_PATH += -I M_hs/interface
 
 #------ List all the module libs to be linked --------------------------------#
 LIBRARY_QAC      = E_FreeRTOS_Kernel/output/$(PROJECT_NAME)/library/E_FreeRTOS_Kernel_default.lib
 LIBRARY_QAC     += E_FreeRTOS_Plus_Trace/output/$(PROJECT_NAME)/library/E_FreeRTOS_Plus_Trace_default.lib
 LIBRARY_QAC     += M_hal/output/$(PROJECT_NAME)/library/M_hal_default.lib
+LIBRARY_QAC     += M_hs/output/$(PROJECT_NAME)/library/M_hs_default.lib
 LIBRARY_QAC     += PG_EswPla/output/$(PROJECT_NAME)/library/PG_EswPla_default.lib
 
 # List of modules to compile (with QAC support - though we're not using QAC)
 MAKE_QAC         = E_FreeRTOS_Kernel/make/default
 MAKE_QAC        += E_FreeRTOS_Plus_Trace/make/default
 MAKE_QAC        += M_hal/make/default
+MAKE_QAC        += M_hs/make/default
 MAKE_QAC        += PG_EswPla/make/default
 
 # Modules without QAC (none in this case)

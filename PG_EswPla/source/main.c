@@ -52,6 +52,10 @@
 #include "semphr.h"
 #include "queue.h"
 
+#include "hal_spi.h"
+#include "hal_init.h"
+#include "tle92104.h"
+
 /*-----------------------------------------------------------*/
 /* CONFIGURATION CONSTANTS                                    */
 /*-----------------------------------------------------------*/
@@ -79,7 +83,7 @@
 /*-----------------------------------------------------------*/
 
 #define mainTASK_SEND_FREQUENCY_MS            pdMS_TO_TICKS( 10000UL )
-#define mainTIMER_SEND_FREQUENCY_MS           pdMS_TO_TICKS( 10000UL )
+#define mainTIMER_SEND_FREQUENCY_MS           pdMS_TO_TICKS( 100UL )
 #define mainTASK_RECEIVE_FREQUENCY_MS         pdMS_TO_TICKS( 1000UL )
 
 /*-----------------------------------------------------------*/
@@ -322,8 +326,42 @@ static void prvQueueSendTask( void * pvParameters )
 static void prvQueueReceiveTask( void * pvParameters )
 {
     uint32_t ulReceivedValue;
+    static bool bHsInitialized = false;
+    tle92104_status_t tle_status;
+    uint8_t ucDeviceId = 0u;
 
     ( void ) pvParameters;
+
+    /* One-time HAL and TLE92104 initialization */
+    if( !bHsInitialized )
+    {
+        taskENTER_CRITICAL();
+        {
+            printf( "[RX Task] Initializing HAL...\r\n" );
+            fflush( stdout );
+        }
+        taskEXIT_CRITICAL();
+
+        (void)hal_init();
+
+        tle_status = hs_init();
+
+        taskENTER_CRITICAL();
+        {
+            if( tle_status == TLE92104_OK )
+            {
+                printf( "[RX Task] TLE92104 initialized OK\r\n" );
+            }
+            else
+            {
+                printf( "[RX Task] TLE92104 init failed (%d)\r\n", (int)tle_status );
+            }
+            fflush( stdout );
+        }
+        taskEXIT_CRITICAL();
+
+        bHsInitialized = true;
+    }
 
     for( ; ; )
     {
@@ -333,7 +371,19 @@ static void prvQueueReceiveTask( void * pvParameters )
         {
             if( ulReceivedValue == mainVALUE_SENT_FROM_TIMER )
             {
-                printf( "Message received from software timer\r\n" );
+                /* Service TLE92104 watchdog every 100 ms */
+                tle_status = hs_service_watchdog();
+                if( tle_status != TLE92104_OK )
+                {
+                    printf( "[RX Task] Watchdog service failed\r\n" );
+                }
+
+                /* Read device ID periodically */
+                tle_status = hs_get_device_id( &ucDeviceId );
+                if( tle_status == TLE92104_OK )
+                {
+                    printf( "[RX Task] TLE92104 DevID=0x%02X\r\n", (unsigned)ucDeviceId );
+                }
             }
 
             ulReceivedValue = 0;

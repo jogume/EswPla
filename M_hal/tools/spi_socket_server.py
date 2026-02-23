@@ -1,13 +1,31 @@
 #!/usr/bin/env python3
 """
-SPI HAL Socket Server
-A TCP socket server for feeding/receiving SPI data to/from the HAL socket implementation.
-This server simulates an SPI device or test equipment for HIL (Hardware-in-the-Loop) testing.
+SPI HAL Socket Server - TLE92104 Simulation
+A TCP socket server simulating the Infineon TLE92104 4-channel high-side switch.
+
+Simulates:
+ - Register reads/writes via SPI 16-bit frames
+ - Device ID (0x5A) in DEVID register
+ - Watchdog register tracking
+ - Diagnostic register (no faults by default)
+
+SPI Frame format (16-bit):
+  [CMD(2) | ADDR(4) | DATA(8) | PARITY(1) | RESERVED(1)]
+  CMD: 00=Read, 01=Write
+  ADDR: 4-bit register address
+  DATA: 8-bit data
+  PARITY: even parity over bits 15:2
+
+Protocol over socket (per HAL socket implementation):
+  TX Header: [msg_type(1) | device_id(1) | data_length(2) | sequence(4)]  = 8 bytes
+  TX Payload: data_length bytes
+  RX Header: [0x80(1) | device_id(1) | data_length(2) | sequence(4)]  = 8 bytes
+  RX Payload: data_length bytes
 
 Usage:
     python spi_socket_server.py [--host HOST] [--port PORT]
 
-Author: EswPla HAL Team
+Author: EswPla Team
 Date: 2026-02-21
 """
 
@@ -30,45 +48,134 @@ class SpiMessageType(IntEnum):
     GET_STATUS   = 0x07
     RESPONSE     = 0x80
 
+
+class TLE92104Simulator:
+    """Simulates the TLE92104 register file and SPI behavior"""
+
+    # Register addresses
+    REG_CTRL1 = 0x00
+    REG_CTRL2 = 0x01
+    REG_CTRL3 = 0x02
+    REG_CFG   = 0x03
+    REG_DIAG  = 0x04
+    REG_WDG   = 0x05
+    REG_ICR   = 0x06
+    REG_HWCR  = 0x07
+    REG_DEVID = 0x08
+
+    DEVICE_ID = 0x5A
+
+    # SPI frame bit positions
+    CMD_SHIFT  = 14
+    ADDR_SHIFT = 10
+    DATA_SHIFT = 2
+    PARITY_BIT = 1
+
+    def __init__(self):
+        """Initialize with default register values"""
+        self.registers = {
+            self.REG_CTRL1: 0x00,
+            self.REG_CTRL2: 0x00,
+            self.REG_CTRL3: 0x00,
+            self.REG_CFG:   0x00,
+            self.REG_DIAG:  0x00,
+            self.REG_WDG:   0x00,
+            self.REG_ICR:   0x00,
+            self.REG_HWCR:  0x00,
+            self.REG_DEVID: self.DEVICE_ID,
+        }
+        self.wdg_count = 0
+        self.last_response_data = 0x00
+        self.last_response_addr = 0x00
+        print(f"[TLE92104-SIM] Initialized. Device ID=0x{self.DEVICE_ID:02X}")
+
+    def process_spi_frame(self, frame_16bit):
+        """
+        Process a 16-bit SPI frame and return 16-bit response.
+        Response contains data from the previous transaction (pipeline behavior).
+        """
+        cmd  = (frame_16bit >> self.CMD_SHIFT) & 0x03
+        addr = (frame_16bit >> self.ADDR_SHIFT) & 0x0F
+        data = (frame_16bit >> self.DATA_SHIFT) & 0xFF
+
+        response_data = self.last_response_data
+        response_addr = self.last_response_addr
+
+        if cmd == 0x00:  # READ
+            self.last_response_data = self.registers.get(addr, 0x00)
+            self.last_response_addr = addr
+            print(f"[TLE92104-SIM] READ  reg[0x{addr:X}] -> 0x{self.last_response_data:02X}")
+        elif cmd == 0x01:  # WRITE
+            if addr != self.REG_DEVID:
+                old_val = self.registers.get(addr, 0x00)
+                self.registers[addr] = data
+                print(f"[TLE92104-SIM] WRITE reg[0x{addr:X}] = 0x{data:02X} (was 0x{old_val:02X})")
+                if addr == self.REG_WDG:
+                    self.wdg_count += 1
+                    if self.wdg_count % 10 == 0:
+                        print(f"[TLE92104-SIM] Watchdog serviced {self.wdg_count} times")
+            else:
+                print(f"[TLE92104-SIM] WRITE to read-only DEVID register ignored")
+            self.last_response_data = self.registers.get(addr, 0x00)
+            self.last_response_addr = addr
+        else:
+            print(f"[TLE92104-SIM] Unknown CMD=0x{cmd:X}")
+            self.last_response_data = 0x00
+            self.last_response_addr = 0x00
+
+        # Build response frame
+        resp_frame = ((response_addr & 0x0F) << self.ADDR_SHIFT) | \
+                     ((response_data & 0xFF) << self.DATA_SHIFT)
+        # Calculate even parity
+        temp = (resp_frame >> 2) & 0x3FFF
+        parity = 0
+        for _ in range(14):
+            parity ^= (temp & 1)
+            temp >>= 1
+        resp_frame |= (parity << self.PARITY_BIT)
+
+        return resp_frame
+
+
 class SpiSocketServer:
-    """SPI HAL Socket Server"""
-    
+    """SPI HAL Socket Server with TLE92104 simulation"""
+
     def __init__(self, host='127.0.0.1', port=9000):
         self.host = host
         self.port = port
         self.server_socket = None
         self.client_socket = None
         self.running = False
-        self.spi_devices = {}  # Store device configurations
-        
+        self.tle92104 = TLE92104Simulator()
+        self.spi_devices = {}
+
     def start(self):
         """Start the socket server"""
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        
+
         try:
             self.server_socket.bind((self.host, self.port))
             self.server_socket.listen(1)
             self.running = True
             print(f"[SPI-SERVER] Listening on {self.host}:{self.port}")
-            
+
             while self.running:
                 print("[SPI-SERVER] Waiting for connection...")
                 self.client_socket, client_addr = self.server_socket.accept()
                 print(f"[SPI-SERVER] Client connected from {client_addr}")
-                
-                # Handle client in a separate thread
+
                 client_thread = threading.Thread(target=self.handle_client)
                 client_thread.start()
                 client_thread.join()
-                
+
         except KeyboardInterrupt:
             print("\n[SPI-SERVER] Shutting down...")
         except Exception as e:
             print(f"[SPI-SERVER] ERROR: {e}")
         finally:
             self.stop()
-    
+
     def stop(self):
         """Stop the server"""
         self.running = False
@@ -77,35 +184,28 @@ class SpiSocketServer:
         if self.server_socket:
             self.server_socket.close()
         print("[SPI-SERVER] Server stopped")
-    
+
     def handle_client(self):
         """Handle client connection"""
         try:
             while self.running:
-                # Receive message header (8 bytes)
                 header_data = self.receive_all(8)
                 if not header_data:
                     break
-                
+
                 msg_type, device_id, data_length, sequence = struct.unpack('<BBHI', header_data)
-                
-                print(f"[SPI-SERVER] RX: Type={hex(msg_type)}, Device={device_id}, "
-                      f"Length={data_length}, Seq={sequence}")
-                
-                # Receive payload if present
+
                 payload = None
                 if data_length > 0:
                     payload = self.receive_all(data_length)
                     if not payload:
                         break
-                
-                # Process message
+
                 response = self.process_message(msg_type, device_id, payload)
-                
-                # Send response
+
                 if response is not None:
                     self.send_response(msg_type, device_id, sequence, response)
-                    
+
         except Exception as e:
             print(f"[SPI-SERVER] Client error: {e}")
         finally:
@@ -113,7 +213,7 @@ class SpiSocketServer:
                 self.client_socket.close()
                 self.client_socket = None
             print("[SPI-SERVER] Client disconnected")
-    
+
     def receive_all(self, length):
         """Receive exact number of bytes"""
         data = b''
@@ -123,26 +223,21 @@ class SpiSocketServer:
                 return None
             data += chunk
         return data
-    
+
     def send_response(self, msg_type, device_id, sequence, data):
         """Send response message"""
         response_type = SpiMessageType.RESPONSE
         data_length = len(data) if data else 0
-        
         header = struct.pack('<BBHI', response_type, device_id, data_length, sequence)
         self.client_socket.sendall(header)
-        
         if data:
             self.client_socket.sendall(data)
-            
-        print(f"[SPI-SERVER] TX: Response to seq={sequence}, length={data_length}")
-    
+
     def process_message(self, msg_type, device_id, payload):
         """Process received message and generate response"""
-        
+
         if msg_type == SpiMessageType.INIT:
-            # Parse SPI configuration (8 bytes)
-            if payload and len(payload) >= 8:
+            if payload and len(payload) >= 7:
                 baudrate, mode, bit_order, data_bits = struct.unpack('<IBBB', payload[:7])
                 self.spi_devices[device_id] = {
                     'baudrate': baudrate,
@@ -153,42 +248,31 @@ class SpiSocketServer:
                 }
                 print(f"[SPI-SERVER] Device {device_id} initialized: "
                       f"{baudrate}Hz, mode={mode}, {data_bits}-bit")
-            return b''  # Empty response = success
-            
+            self.tle92104 = TLE92104Simulator()
+            return b''
+
         elif msg_type == SpiMessageType.DEINIT:
             if device_id in self.spi_devices:
                 del self.spi_devices[device_id]
                 print(f"[SPI-SERVER] Device {device_id} deinitialized")
             return b''
-            
+
         elif msg_type == SpiMessageType.TRANSFER:
-            # Echo back the data (simulate SPI loopback)
-            # In real application, this would communicate with actual device
-            print(f"[SPI-SERVER] Transfer {len(payload)} bytes: {payload[:16].hex()}...")
-            
-            # Example: Process the data and return modified response
-            response = self.simulate_spi_device_response(device_id, payload)
-            return response
-            
+            return self.process_spi_transfer(payload)
+
         elif msg_type == SpiMessageType.SEND:
-            # Receive only - acknowledge
-            print(f"[SPI-SERVER] Received {len(payload)} bytes: {payload[:16].hex()}...")
-            return b''  # Acknowledge
-            
+            if payload:
+                self.process_spi_transfer(payload)
+            return b''
+
         elif msg_type == SpiMessageType.RECEIVE:
-            # Send data to client
             if payload and len(payload) >= 2:
                 requested_length = struct.unpack('>H', payload[:2])[0]
-                print(f"[SPI-SERVER] Requested {requested_length} bytes")
-                
-                # Generate test data
-                response = self.generate_test_data(device_id, requested_length)
-                return response
+                return bytes(requested_length)
             return b''
-            
+
         elif msg_type == SpiMessageType.SET_CONFIG:
-            # Update configuration
-            if payload and len(payload) >= 8:
+            if payload and len(payload) >= 7:
                 baudrate, mode, bit_order, data_bits = struct.unpack('<IBBB', payload[:7])
                 if device_id in self.spi_devices:
                     self.spi_devices[device_id].update({
@@ -199,59 +283,54 @@ class SpiSocketServer:
                     })
                     print(f"[SPI-SERVER] Device {device_id} reconfigured")
             return b''
-            
+
+        elif msg_type == SpiMessageType.GET_STATUS:
+            return struct.pack('<BB', 1, 0)
+
         else:
             print(f"[SPI-SERVER] Unknown message type: {hex(msg_type)}")
             return b''
-    
-    def simulate_spi_device_response(self, device_id, tx_data):
+
+    def process_spi_transfer(self, payload):
         """
-        Simulate an SPI device response.
-        Override this method to implement custom device behavior.
+        Process SPI transfer payload through TLE92104 simulator.
+        Payload contains raw SPI bytes (2 bytes = 1 x 16-bit frame).
         """
-        # Example: Echo with XOR modification
-        response = bytes([b ^ 0x00 for b in tx_data])
-        
-        # Example: Simulate a specific device (e.g., accelerometer, ADC, etc.)
-        # if device_id == 0:
-        #     # Simulate accelerometer reading
-        #     response = struct.pack('<HHH', 100, 200, 1024)  # X, Y, Z axes
-        
-        return response
-    
-    def generate_test_data(self, device_id, length):
-        """
-        Generate test data for receive operations.
-        Override this method to provide custom test patterns.
-        """
-        # Generate incrementing pattern
-        data = bytes([(i + device_id) % 256 for i in range(length)])
-        
-        # Alternative: Random data
-        # import random
-        # data = bytes([random.randint(0, 255) for _ in range(length)])
-        
-        return data
+        if not payload or len(payload) < 2:
+            return payload if payload else b''
+
+        response = bytearray()
+        for i in range(0, len(payload) - 1, 2):
+            tx_frame = (payload[i] << 8) | payload[i + 1]
+            rx_frame = self.tle92104.process_spi_frame(tx_frame)
+            response.append((rx_frame >> 8) & 0xFF)
+            response.append(rx_frame & 0xFF)
+
+        if len(payload) % 2 != 0:
+            response.append(0x00)
+
+        return bytes(response)
 
 
 def main():
     """Main entry point"""
-    parser = argparse.ArgumentParser(description='SPI HAL Socket Server')
-    parser.add_argument('--host', default='127.0.0.1', 
+    parser = argparse.ArgumentParser(description='SPI HAL Socket Server - TLE92104 Simulation')
+    parser.add_argument('--host', default='127.0.0.1',
                         help='Server host address (default: 127.0.0.1)')
-    parser.add_argument('--port', type=int, default=9000, 
+    parser.add_argument('--port', type=int, default=9000,
                         help='Server port (default: 9000)')
-    
+
     args = parser.parse_args()
-    
+
     print("=" * 60)
-    print("SPI HAL Socket Server")
+    print("SPI HAL Socket Server - TLE92104 Simulation")
     print("=" * 60)
     print(f"Host: {args.host}")
     print(f"Port: {args.port}")
+    print(f"Simulated device: TLE92104 (ID=0x5A)")
     print("Press Ctrl+C to stop")
     print("=" * 60)
-    
+
     server = SpiSocketServer(host=args.host, port=args.port)
     server.start()
 
