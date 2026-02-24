@@ -1,0 +1,170 @@
+# Build directory
+BUILD_DIR := ./build
+
+# Compiler - Note this expects you are using MinGW version of GCC
+CC := gcc
+CFLAGS := -O0 -g3 -Wall -Wextra -c -fmessage-length=0 -Wcast-qual -D_WIN32_WINNT=0x0601
+
+ifeq ($(COVERAGE_TEST),1)
+  CFLAGS += -DprojCOVERAGE_TEST=1
+else
+  CFLAGS += -DprojCOVERAGE_TEST=0
+endif
+
+# Linker - Note this expects you are using MinGW version of GCC
+LD :=  ${CC}
+LDFLAGS := -Xlinker -Map=$(BUILD_DIR)/rtosdemo.map
+
+# Executable Targets
+EXE := $(BUILD_DIR)/RTOSDemo.exe
+
+# FreeRTOS Kernel
+FREERTOS_KERNEL_DIR := $(abspath ../E_FreeRTOS_Kernel)
+FREERTOS_KERNEL_INCLUDES :=
+FREERTOS_KERNEL_SOURCES :=
+FREERTOS_KERNEL_INCLUDE_DIRS :=
+FREERTOS_KERNEL_OBJS :=
+FREERTOS_KERNEL_BUILD_DIR := $(BUILD_DIR)/FreeRTOS-Kernel
+
+## FreeRTOS Kernel includes
+FREERTOS_KERNEL_INCLUDES += $(wildcard $(FREERTOS_KERNEL_DIR)/include/*.h)
+FREERTOS_KERNEL_INCLUDE_DIRS += -I $(FREERTOS_KERNEL_DIR)/include
+
+## FreeRTOS Kernel sources
+FREERTOS_KERNEL_SOURCES += $(wildcard $(FREERTOS_KERNEL_DIR)/*.c)
+FREERTOS_KERNEL_SOURCES += $(FREERTOS_KERNEL_DIR)/portable/MemMang/heap_5.c
+
+## FreeRTOS Kernel Windows port includes
+FREERTOS_KERNEL_INCLUDES += $(FREERTOS_KERNEL_DIR)/portable/MSVC-MingW/portmacro.h
+FREERTOS_KERNEL_INCLUDE_DIRS += -I $(FREERTOS_KERNEL_DIR)/portable/MSVC-MingW
+
+## FreeRTOS Kernel Windows port sources
+FREERTOS_KERNEL_SOURCES += $(FREERTOS_KERNEL_DIR)/portable/MSVC-MingW/port.c
+
+## FreeRTOS Kernel configuration includes
+FREERTOS_KERNEL_INCLUDES += ./FreeRTOSConfig.h
+FREERTOS_KERNEL_INCLUDE_DIRS += -I .
+
+# FreeRTOS Kernel objects
+FREERTOS_KERNEL_SOURCES_NAMES :=$(notdir $(FREERTOS_KERNEL_SOURCES))
+FREERTOS_KERNEL_OBJS := $(FREERTOS_KERNEL_SOURCES_NAMES:%.c=$(FREERTOS_KERNEL_BUILD_DIR)/%.o)
+
+# Trace Recorder
+FREERTOS_PLUS_TRACE_DIR := $(abspath ../E_FreeRTOS_Plus_Trace)
+FREERTOS_PLUS_TRACE_INCLUDES :=
+FREERTOS_PLUS_TRACE_SOURCES :=
+FREERTOS_PLUS_TRACE_INCLUDE_DIRS :=
+FREERTOS_PLUS_TRACE_OBJS :=
+FREERTOS_PLUS_TRACE_BUILD_DIR := $(BUILD_DIR)/FreeRTOS-Plus-Trace
+
+## Trace Recorder includes
+# FREERTOS_PLUS_TRACE_INCLUDES += $(wildcard $(FREERTOS_PLUS_TRACE_DIR)/include/*.h)
+FREERTOS_PLUS_TRACE_INCLUDE_DIRS += -I $(FREERTOS_PLUS_TRACE_DIR)/include
+# FREERTOS_PLUS_TRACE_INCLUDES += $(wildcard $(FREERTOS_PLUS_TRACE_DIR)/kernelports/FreeRTOS/include/*.h)
+FREERTOS_PLUS_TRACE_INCLUDE_DIRS += -I $(FREERTOS_PLUS_TRACE_DIR)/kernelports/FreeRTOS/include
+
+## Trace Recorder sources
+FREERTOS_PLUS_TRACE_SOURCES += $(wildcard $(FREERTOS_PLUS_TRACE_DIR)/*.c)
+FREERTOS_PLUS_TRACE_SOURCES += $(wildcard $(FREERTOS_PLUS_TRACE_DIR)/kernelports/FreeRTOS/*.c)
+
+## Trace Recorder configuration includes
+# FREERTOS_PLUS_TRACE_INCLUDES += $(wildcard ./Trace_Recorder_Configuration/*.h)
+FREERTOS_PLUS_TRACE_INCLUDE_DIRS += -I ./Trace_Recorder_Configuration
+
+# Trace Recoder objects
+FREERTOS_PLUS_TRACE_SOURCES_NAMES :=$(notdir $(FREERTOS_PLUS_TRACE_SOURCES))
+FREERTOS_PLUS_TRACE_OBJS := $(FREERTOS_PLUS_TRACE_SOURCES_NAMES:%.c=$(FREERTOS_PLUS_TRACE_BUILD_DIR)/%.o)
+
+# Demos
+FREERTOS_DEMOS_DIR := $(abspath ../Common/Minimal)
+FREERTOS_DEMOS_INCLUDES :=
+FREERTOS_DEMOS_SOURCES :=
+FREERTOS_DEMOS_INCLUDE_DIRS :=
+FREERTOS_DEMOS_OBJS :=
+FREERTOS_DEMOS_BUILD_DIR := $(BUILD_DIR)/FreeRTOS-Demos
+
+## Demos includes
+FREERTOS_DEMOS_INCLUDES := $(wildcard $(FREERTOS_DEMOS_DIR)/../include/*.h)
+FREERTOS_DEMOS_INCLUDE_DIRS := -I $(FREERTOS_DEMOS_DIR)/../include
+
+## Demos sources
+FREERTOS_DEMOS_SOURCES += $(wildcard $(FREERTOS_DEMOS_DIR)/*.c)
+
+### Filter out unsupported demos
+FREERTOS_DEMOS_SOURCES := $(filter-out $(FREERTOS_DEMOS_DIR)/comtest_strings.c, $(FREERTOS_DEMOS_SOURCES))
+FREERTOS_DEMOS_SOURCES := $(filter-out $(FREERTOS_DEMOS_DIR)/comtest.c, $(FREERTOS_DEMOS_SOURCES))
+FREERTOS_DEMOS_SOURCES := $(filter-out $(FREERTOS_DEMOS_DIR)/flash_timer.c, $(FREERTOS_DEMOS_SOURCES))
+FREERTOS_DEMOS_SOURCES := $(filter-out $(FREERTOS_DEMOS_DIR)/flash.c, $(FREERTOS_DEMOS_SOURCES))
+FREERTOS_DEMOS_SOURCES := $(filter-out $(FREERTOS_DEMOS_DIR)/IntQueue.c, $(FREERTOS_DEMOS_SOURCES))
+FREERTOS_DEMOS_SOURCES := $(filter-out $(FREERTOS_DEMOS_DIR)/recmutex.c, $(FREERTOS_DEMOS_SOURCES))
+FREERTOS_DEMOS_SOURCES += ./DemosModifiedForLowTickRate/recmutex.c
+FREERTOS_DEMOS_SOURCES := $(filter-out $(FREERTOS_DEMOS_DIR)/sp_flop.c, $(FREERTOS_DEMOS_SOURCES))
+FREERTOS_DEMOS_SOURCES := $(filter-out $(FREERTOS_DEMOS_DIR)/TaskNotifyArray.c, $(FREERTOS_DEMOS_SOURCES))
+
+## Demos objects
+FREERTOS_DEMOS_SOURCES_NAMES :=$(notdir $(FREERTOS_DEMOS_SOURCES))
+FREERTOS_DEMOS_OBJS := $(FREERTOS_DEMOS_SOURCES_NAMES:%.c=$(FREERTOS_DEMOS_BUILD_DIR)/%.o)
+
+# Main
+MAIN_DIR := $(abspath src)
+MAIN_INCLUDES := $(wildcard $(MAIN_DIR)/*.h)
+MAIN_SOURCES :=
+MAIN_INCLUDE_DIRS :=
+MAIN_BUILD_DIR := $(BUILD_DIR)/main
+
+## Main includes
+# MAIN_INCLUDES += $(wildcard $(MAIN_DIR)/framework/*.h)
+# MAIN_INCLUDES += $(wildcard $(MAIN_DIR)/freertos_app/*.h)
+# MAIN_INCLUDES += $(wildcard $(MAIN_DIR)/pack_unpack/*.h)
+MAIN_INCLUDE_DIRS += -I $(MAIN_DIR)
+# MAIN_INCLUDE_DIRS += -I $(MAIN_DIR)/framework
+# MAIN_INCLUDE_DIRS += -I $(MAIN_DIR)/freertos_app
+# MAIN_INCLUDE_DIRS += -I $(MAIN_DIR)/pack_unpack
+
+# ## Main sources
+# MAIN_SOURCES += $(wildcard $(MAIN_DIR)/framework/*.c)
+# MAIN_SOURCES += $(wildcard $(MAIN_DIR)/freertos_app/*.c)
+# MAIN_SOURCES += $(wildcard $(MAIN_DIR)/pack_unpack/*.c)
+MAIN_SOURCES += $(wildcard $(MAIN_DIR)/*.c)
+MAIN_SOURCES := $(filter-out $(MAIN_DIR)/main_full.c, $(MAIN_SOURCES))
+
+## Main objects
+MAIN_SOURCES_NAMES :=$(notdir $(MAIN_SOURCES))
+MAIN_OBJS := $(MAIN_SOURCES_NAMES:%.c=$(MAIN_BUILD_DIR)/%.o)
+
+.PHONY: $(EXE) clean
+
+# $(EXE) : $(MAIN_OBJS) $(FREERTOS_KERNEL_OBJS) $(FREERTOS_DEMOS_OBJS) $(FREERTOS_PLUS_TRACE_OBJS)
+$(EXE) : $(MAIN_OBJS) $(FREERTOS_KERNEL_OBJS) $(FREERTOS_PLUS_TRACE_OBJS)
+	$(LD) $(LDFLAGS) -o $@ $^ -lwinmm
+
+# Main objects rules
+# $(MAIN_OBJS): %.o: $(MAIN_SOURCES) $(MAIN_INCLUDES) $(FREERTOS_KERNEL_INCLUDES) $(FREERTOS_PLUS_TRACE_INCLUDES) $(FREERTOS_DEMOS_INCLUDES)
+$(MAIN_OBJS): %.o: $(MAIN_SOURCES) $(MAIN_INCLUDES)
+	mkdir -p $(@D)
+# $(CC) $(CFLAGS) $(FREERTOS_KERNEL_INCLUDE_DIRS) $(FREERTOS_PLUS_TRACE_INCLUDE_DIRS) $(FREERTOS_DEMOS_INCLUDE_DIRS) -o $@ $(filter %$(notdir $(patsubst %.o, %.c, $@)), $^)
+	$(CC) $(CFLAGS) $(MAIN_INCLUDE_DIRS) $(FREERTOS_KERNEL_INCLUDE_DIRS) $(FREERTOS_PLUS_TRACE_INCLUDE_DIRS) $(FREERTOS_DEMOS_INCLUDE_DIRS) -o $@ $(filter %$(notdir $(patsubst %.o, %.c, $@)), $^)
+
+
+# FreeRTOS Kernel objects rules
+# $(FREERTOS_KERNEL_OBJS): %.o: $(FREERTOS_KERNEL_SOURCES) $(FREERTOS_KERNEL_INCLUDES) $(FREERTOS_PLUS_TRACE_INCLUDES)
+$(FREERTOS_KERNEL_OBJS): %.o: $(FREERTOS_KERNEL_SOURCES) $(FREERTOS_KERNEL_INCLUDES)
+	mkdir -p $(@D)
+# $(CC) $(CFLAGS) $(FREERTOS_KERNEL_INCLUDE_DIRS) $(FREERTOS_PLUS_TRACE_INCLUDE_DIRS) -o $@ $(filter %$(notdir $(patsubst %.o, %.c, $@)), $^)
+	$(CC) $(CFLAGS) $(FREERTOS_KERNEL_INCLUDE_DIRS) $(FREERTOS_PLUS_TRACE_INCLUDE_DIRS) -o $@ $(filter %$(notdir $(patsubst %.o, %.c, $@)), $^)
+
+# FreeRTOS Demos objects rules
+$(FREERTOS_DEMOS_OBJS): %.o: $(FREERTOS_DEMOS_SOURCES) $(FREERTOS_DEMOS_INCLUDES) $(FREERTOS_KERNEL_INCLUDES) $(FREERTOS_PLUS_TRACE_INCLUDES)
+	mkdir -p $(@D)
+	$(CC) $(CFLAGS) $(FREERTOS_DEMOS_INCLUDE_DIRS) $(FREERTOS_KERNEL_INCLUDE_DIRS) $(FREERTOS_PLUS_TRACE_INCLUDE_DIRS) -o $@ $(filter %$(notdir $(patsubst %.o, %.c, $@)), $^)
+
+# Trace Recorder object filess
+$(FREERTOS_PLUS_TRACE_OBJS): %.o: $(FREERTOS_PLUS_TRACE_SOURCES) $(FREERTOS_PLUS_TRACE_INCLUDES) $(FREERTOS_KERNEL_INCLUDES)
+	mkdir -p $(@D)
+	$(CC) $(CFLAGS) $(FREERTOS_PLUS_TRACE_INCLUDE_DIRS) $(FREERTOS_KERNEL_INCLUDE_DIRS) -o $@ $(filter %$(notdir $(patsubst %.o, %.c, $@)), $^)
+
+# Clean rule
+clean:
+	rm -rf $(BUILD_DIR)
+
+
