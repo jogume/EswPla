@@ -1,3 +1,6 @@
 [submodule "E_FreeRTOS_Kernel"]
 	path = E_FreeRTOS_Kernel
 	url = https://github.com/jogume/E_FreeRTOS_Kernel.git
+[submodule "E_FreeRTOS_Plus_Trace"]
+	path = E_FreeRTOS_Plus_Trace
+	url = https://github.com/jogume/E_FreeRTOS_Plus_Trace.git
