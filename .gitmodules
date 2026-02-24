@@ -4,3 +4,12 @@
 [submodule "E_FreeRTOS_Plus_Trace"]
 	path = E_FreeRTOS_Plus_Trace
 	url = https://github.com/jogume/E_FreeRTOS_Plus_Trace.git
+[submodule "M_make"]
+	path = M_make
+	url = https://github.com/jogume/M_make.git
+[submodule "M_hal"]
+	path = M_hal
+	url = https://github.com/jogume/M_hal.git
+[submodule "M_hs"]
+	path = M_hs
+	url = https://github.com/jogume/M_hs.git
