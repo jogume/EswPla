@@ -1,7 +1,7 @@
 #** *************************************************************************** 
 # \copyright       EswPla FreeRTOS Project
 # \file            Makefile
-# \brief           Top-level Makefile for PG_EswPla project
+# \brief           Top-level Makefile for PG_Yolpiya project
 # \Make            GNU Make
 #******************************************************************************
 
@@ -17,7 +17,7 @@ MAKECMDGOALS ?= all
 
 #------------------------------------------------------------------------------
 # Makefile call - triggers the main build system
-# $(mfd) gives path to "PG_EswPla/" add subdirectory path of m_project_cfg.mak
+# $(mfd) gives path to "PG_Yolpiya/" add subdirectory path of m_project_cfg.mak
 #------------------------------------------------------------------------------
 $(MAKECMDGOALS):
 	$(MAKE) -C ../ -f M_make/make/makefile.mak -I $(mfd)make $(MAKECMDGOALS) ${MAKEOPTION}

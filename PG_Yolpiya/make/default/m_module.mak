@@ -1,12 +1,12 @@
 ###############################################################################
 #                                                                             #
-#     Module Description:  PG_EswPla Application module makefile             #
-#     Module Name:         PG_EswPla                                          #
+#     Module Description:  PG_Yolpiya Application module makefile            #
+#     Module Name:         PG_Yolpiya                                         #
 #                                                                             #
 ###############################################################################
 
 #------------------------- Module information --------------------------------#
-MODULE_NAME            = PG_EswPla
+MODULE_NAME            = PG_Yolpiya
 MODULE_PATH            = source:source/framework:source/freertos_app:source/pack_unpack
 MODULE_HEADER_PATH     = source:source/framework:source/freertos_app:source/pack_unpack:Trace_Recorder_Configuration
 MODULE_STATUS          = public
