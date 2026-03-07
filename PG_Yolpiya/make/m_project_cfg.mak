@@ -16,7 +16,7 @@ LINKING_VARIANT = default
 #------------------------- Compiler settings ---------------------------------#
 COMPILER_NAME    = T_gcc
 COMPILER_VARIANT = mingw
-COMPILER_VERSION = 8.1.0
+COMPILER_VERSION = V15.2.0
 COMPILER_PREFIX  =
 
 # Compiler defines during compilation

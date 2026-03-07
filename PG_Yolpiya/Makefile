@@ -16,6 +16,11 @@ mfd := $(dir $(realpath $(lastword ${MAKEFILE_LIST})))
 MAKECMDGOALS ?= all
 
 #------------------------------------------------------------------------------
+# Environment variable settings
+#------------------------------------------------------------------------------
+include ../M_make/make/m_env_settings.mak
+
+#------------------------------------------------------------------------------
 # Makefile call - triggers the main build system
 # $(mfd) gives path to "PG_Yolpiya/" add subdirectory path of m_project_cfg.mak
 #------------------------------------------------------------------------------
