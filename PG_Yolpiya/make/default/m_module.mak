@@ -6,11 +6,11 @@
 ###############################################################################
 
 #------------------------- Module information --------------------------------#
-MODULE_NAME            = PG_Yolpiya
-MODULE_PATH            = source:source/framework:source/freertos_app:source/pack_unpack
-MODULE_HEADER_PATH     = source:source/framework:source/freertos_app:source/pack_unpack:Trace_Recorder_Configuration
-MODULE_STATUS          = public
-PRE_COMPILE_VARIANT    = default
+MODULE_NAME             = PG_Yolpiya
+MODULE_SOURCES_PATH     = source:source/framework:source/freertos_app:source/pack_unpack
+CC_INCLUDE_PRIVATE_PATH = .:source:source/framework:source/freertos_app:source/pack_unpack:Trace_Recorder_Configuration
+MODULE_STATUS           = public
+PRE_COMPILE_VARIANT     = default
 
 #---------------------------------------------------------------------------------------------------------------------------#
 # Objects - Main application files

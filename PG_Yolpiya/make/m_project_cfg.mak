@@ -24,19 +24,19 @@ COMPILER_DEFINE_PROJECT = -D_WIN32_WINNT=0x0601 -DprojCOVERAGE_TEST=0
 
 #------------------------- List of all the modules source files path ---------#
 # Header paths for all modules
-HEADER_PATH  = -I PG_Yolpiya/source
-HEADER_PATH += -I PG_Yolpiya/source/framework
-HEADER_PATH += -I PG_Yolpiya/source/freertos_app
-HEADER_PATH += -I PG_Yolpiya/source/pack_unpack
-HEADER_PATH += -I PG_Yolpiya/Trace_Recorder_Configuration
-HEADER_PATH += -I PG_Yolpiya
-HEADER_PATH += -I E_FreeRTOS_Kernel/include
-HEADER_PATH += -I E_FreeRTOS_Kernel/portable/MSVC-MingW
-HEADER_PATH += -I E_FreeRTOS_Plus_Trace/include
-HEADER_PATH += -I E_FreeRTOS_Plus_Trace/kernelports/FreeRTOS/include
-HEADER_PATH += -I M_make/interface
-HEADER_PATH += -I M_hal/interface
-HEADER_PATH += -I M_hs/interface
+# CC_INCLUDE_PATH  = -I PG_Yolpiya/source
+# CC_INCLUDE_PATH += -I PG_Yolpiya/source/framework
+# CC_INCLUDE_PATH += -I PG_Yolpiya/source/freertos_app
+# CC_INCLUDE_PATH += -I PG_Yolpiya/source/pack_unpack
+CC_INCLUDE_PATH += -I PG_Yolpiya/Trace_Recorder_Configuration
+CC_INCLUDE_PATH += -I PG_Yolpiya
+CC_INCLUDE_PATH += -I E_FreeRTOS_Kernel/include
+CC_INCLUDE_PATH += -I E_FreeRTOS_Kernel/portable/MSVC-MingW
+CC_INCLUDE_PATH += -I E_FreeRTOS_Plus_Trace/include
+CC_INCLUDE_PATH += -I E_FreeRTOS_Plus_Trace/kernelports/FreeRTOS/include
+CC_INCLUDE_PATH += -I M_make/interface
+CC_INCLUDE_PATH += -I M_hal/interface
+CC_INCLUDE_PATH += -I M_hs/interface
 
 #------ List all the module libs to be linked --------------------------------#
 LIBRARY_QAC      = E_FreeRTOS_Kernel/output/$(PROJECT_NAME)/library/E_FreeRTOS_Kernel_default.lib
